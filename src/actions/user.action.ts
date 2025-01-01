@@ -69,7 +69,7 @@ export async function getDbUserId() {
     const { userId: clerkId } = await auth();
 
     if (!clerkId) {
-      throw new Error("Unauthorized");
+      return null;
     }
 
     const user = await prisma
@@ -93,6 +93,10 @@ export async function getDbUserId() {
 export async function getRandomUsers() {
   try {
     const userId = await getDbUserId();
+
+    if (!userId) {
+      return [];
+    }
 
     const randomUsers = await prisma
       .user
