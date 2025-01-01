@@ -5,12 +5,13 @@ import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { Textarea } from "./ui/textarea";
-import { Button } from "./ui/button";
 import { ImageIcon, Loader2Icon, SendIcon } from "lucide-react";
+import { Button } from "./ui/button";
 import { createPost } from "@/actions/post.action";
 import toast from "react-hot-toast";
+import ImageUpload from "./ImageUpload";
 
-export default function CreatePost() {
+function CreatePost() {
   const { user } = useUser();
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -21,25 +22,23 @@ export default function CreatePost() {
     if (!content.trim() && !imageUrl) return;
 
     setIsPosting(true);
-
     try {
       const result = await createPost(content, imageUrl);
-
-      if (result.success) {
-        setContent("")
+      if (result?.success) {
+        // reset the form
+        setContent("");
         setImageUrl("");
         setShowImageUpload(false);
 
-        toast.success("Post Uploaded Successfully");
+        toast.success("Post created successfully");
       }
     } catch (error) {
-      console.error("Error Creating the Post : ", error);
-
+      console.error("Failed to create post:", error);
       toast.error("Failed to create post");
     } finally {
       setIsPosting(false);
     }
-  }
+  };
 
   return (
     <Card className="mb-6">
@@ -49,7 +48,6 @@ export default function CreatePost() {
             <Avatar className="w-10 h-10">
               <AvatarImage src={user?.imageUrl || "/avatar.png"} />
             </Avatar>
-
             <Textarea
               placeholder="What's on your mind?"
               className="min-h-[100px] resize-none border-none focus-visible:ring-0 p-0 text-base"
@@ -59,7 +57,18 @@ export default function CreatePost() {
             />
           </div>
 
-          {/* TODO: Handle Image Upload */}
+          {(showImageUpload || imageUrl) && (
+            <div className="border rounded-lg p-4">
+              <ImageUpload
+                endpoint="postImage"
+                value={imageUrl}
+                onChange={(url) => {
+                  setImageUrl(url);
+                  if (!url) setShowImageUpload(false);
+                }}
+              />
+            </div>
+          )}
 
           <div className="flex items-center justify-between border-t pt-4">
             <div className="flex space-x-2">
@@ -72,11 +81,9 @@ export default function CreatePost() {
                 disabled={isPosting}
               >
                 <ImageIcon className="size-4 mr-2" />
-
                 Photo
               </Button>
             </div>
-
             <Button
               className="flex items-center"
               onClick={handleSubmit}
@@ -100,3 +107,4 @@ export default function CreatePost() {
     </Card>
   );
 }
+export default CreatePost;
