@@ -2,6 +2,7 @@ import { getPosts } from "@/actions/post.action";
 import { getDbUserId } from "@/actions/user.action";
 import CreatePost from "@/components/CreatePost";
 import PostCard from "@/components/PostCard";
+import WhoToFollow from "@/components/WhoToFollow";
 import { currentUser } from "@clerk/nextjs/server";
 
 export default async function Home() {
@@ -34,8 +35,7 @@ export default async function Home() {
       </div>
 
       <div className="hidden lg:block lg:col-span-4 sticky top-20">
-        {/* <WhoToFollow /> */}
-        Who to follow
+        <WhoToFollow />
       </div>
     </div>
   );
