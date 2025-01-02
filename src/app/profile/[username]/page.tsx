@@ -1,9 +1,10 @@
-import { getProfileByUsername, getUserLikedPosts, getUserPosts, isFollowing } from "@/actions/profile.action";
+import { getFollowers, getFollowing, getProfileByUsername, getUserLikedPosts, getUserPosts, isFollowing } from "@/actions/profile.action";
 import { notFound } from "next/navigation";
 import ProfilePageClient from "./ProfilePageClient";
 
 export async function generateMetadata({ params }: { params: { username: string } }) {
   const user = await getProfileByUsername(params.username);
+
   if (!user) return;
 
   return {
@@ -26,11 +27,15 @@ export default async function ProfilePage({
   const [
     posts,
     likedPosts,
-    isCurrentUserFollowing
+    isCurrentUserFollowing,
+    followers,
+    following,
   ] = await Promise.all([
     getUserPosts(user.id),
     getUserLikedPosts(user.id),
     isFollowing(user.id),
+    getFollowers(user.id),
+    getFollowing(user.id),
   ]);
 
   return (
@@ -39,6 +44,8 @@ export default async function ProfilePage({
       posts={posts}
       likedPosts={likedPosts}
       isFollowing={isCurrentUserFollowing}
+      followers={followers}
+      following={following}
     />
   );
 }

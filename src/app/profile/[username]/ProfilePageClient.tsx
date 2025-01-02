@@ -1,7 +1,8 @@
 "use client";
 
-import { getProfileByUsername, getUserPosts, updateProfile } from "@/actions/profile.action";
+import { getFollowers, getFollowing, getProfileByUsername, getUserPosts, updateProfile } from "@/actions/profile.action";
 import { toggleFollow } from "@/actions/user.action";
+import FollowButton from "@/components/FollowButton";
 import PostCard from "@/components/PostCard";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { SignInButton, useUser } from "@clerk/nextjs";
+import { Return } from "@prisma/client/runtime/library";
 import { format } from "date-fns";
 import {
   CalendarIcon,
@@ -27,18 +29,25 @@ import {
   HeartIcon,
   LinkIcon,
   MapPinIcon,
+  UserRoundCheck,
+  UserRoundPlus,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
 type User = Awaited<ReturnType<typeof getProfileByUsername>>;
 type Posts = Awaited<ReturnType<typeof getUserPosts>>;
+type Followers = Awaited<Return<typeof getFollowers>>;
+type Following = Awaited<Return<typeof getFollowing>>;
 
 interface ProfilePageClientProps {
   user: NonNullable<User>;
   posts: Posts;
   likedPosts: Posts;
   isFollowing: boolean;
+  followers: Followers;
+  following: Following;
 }
 
 function ProfilePageClient({
@@ -46,6 +55,8 @@ function ProfilePageClient({
   likedPosts,
   posts,
   user,
+  followers,
+  following,
 }: ProfilePageClientProps) {
   const { user: currentUser } = useUser();
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -190,6 +201,7 @@ function ProfilePageClient({
               <FileTextIcon className="size-4" />
               Posts
             </TabsTrigger>
+
             <TabsTrigger
               value="likes"
               className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary
@@ -197,6 +209,24 @@ function ProfilePageClient({
             >
               <HeartIcon className="size-4" />
               Likes
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="followers"
+              className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary
+               data-[state=active]:bg-transparent px-6 font-semibold"
+            >
+              <UserRoundCheck className="size-4" />
+              Followers
+            </TabsTrigger>
+
+            <TabsTrigger
+              value="following"
+              className="flex items-center gap-2 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary
+               data-[state=active]:bg-transparent px-6 font-semibold"
+            >
+              <UserRoundPlus className="size-4" />
+              Following
             </TabsTrigger>
           </TabsList>
 
@@ -216,6 +246,70 @@ function ProfilePageClient({
                 likedPosts.map((post) => <PostCard key={post.id} post={post} dbUserId={user.id} />)
               ) : (
                 <div className="text-center py-8 text-muted-foreground">No liked posts to show</div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="followers" className="mt-6">
+            <div className="space-y-6">
+              {followers && followers.length > 0 ? (
+                followers.map((follower) => (
+                  <div
+                    key={follower.id}
+                    className="flex justify-between items-center p-4 bg-black border border-secondary rounded-lg"
+                  >
+                    <Link href={`/profile/${follower.username}`} className="flex gap-4 items-center">
+                      <Avatar>
+                        <AvatarImage src={follower.image || "/avatar.png"} />
+                      </Avatar>
+
+                      <div>
+                        <p className="font-semibold">
+                          {follower.name || follower.username}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          @{follower.username}
+                        </p>
+                      </div>
+                    </Link>
+
+                    <FollowButton userId={follower.id} />
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">No followers to show</div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="following" className="mt-6">
+            <div className="space-y-6">
+              {following && following.length > 0 ? (
+                following.map((follower) => (
+                  <div
+                    key={follower.id}
+                    className="flex justify-between items-center p-4 bg-black border border-secondary rounded-lg"
+                  >
+                    <Link href={`/profile/${follower.username}`} className="flex gap-4 items-center">
+                      <Avatar>
+                        <AvatarImage src={follower.image || "/avatar.png"} />
+                      </Avatar>
+
+                      <div>
+                        <p className="font-semibold">
+                          {follower.name || follower.username}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          @{follower.username}
+                        </p>
+                      </div>
+                    </Link>
+
+                    <FollowButton userId={follower.id} />
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">No following to show</div>
               )}
             </div>
           </TabsContent>

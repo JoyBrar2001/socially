@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Loader2Icon } from "lucide-react";
 import toast from "react-hot-toast";
 import { toggleFollow } from "@/actions/user.action";
+import { isFollowing } from "@/actions/profile.action";
 
 export default function FollowButton({ userId }: { userId: string }) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isFollowingUser, setIsFollowingUser] = useState<boolean | null>(null);
 
   const handleFollow = async () => {
     setIsLoading(true);
@@ -24,8 +26,23 @@ export default function FollowButton({ userId }: { userId: string }) {
       console.error("Error following user : ", error)
     } finally {
       setIsLoading(false);
+      setIsFollowingUser((prev) => !prev);
     }
   }
+
+  useEffect(() => {
+    const fetchFollowStatus = async () => {
+      try {
+        const followStatus = await isFollowing(userId);
+
+        setIsFollowingUser(followStatus);
+      } catch (error) {
+        console.error("Error fetching follow status:", error);
+      }
+    };
+
+    fetchFollowStatus();
+  }, [userId]);
 
   return (
     <Button
@@ -37,6 +54,8 @@ export default function FollowButton({ userId }: { userId: string }) {
     >
       {isLoading ? (
         <Loader2Icon className="size-4 animate-spin" />
+      ) : isFollowingUser ? (
+        "Unfollow"
       ) : (
         "Follow"
       )}

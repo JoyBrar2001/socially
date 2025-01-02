@@ -198,6 +198,7 @@ export async function toggleFollow(targetUserId: string) {
     }
 
     revalidatePath("/");
+    revalidatePath("/profile/[username]");
 
     return { success: true };
   } catch (error) {

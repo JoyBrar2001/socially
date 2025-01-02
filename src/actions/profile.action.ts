@@ -206,3 +206,57 @@ export async function isFollowing(userId: string) {
     return false;
   }
 }
+
+export async function getFollowers(userId: string) {
+  try {
+    const followers = await prisma.user.findMany({
+      where: {
+        following: {
+          some: {
+            followingId: userId,
+          },
+        },
+        id: {
+          not: userId,
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        image: true,
+        bio: true,
+      }
+    });
+
+    return followers;
+  } catch (error) {
+    console.error("Error checking follow status:", error);
+    return false;
+  }
+}
+
+export async function getFollowing(userId: string) {
+  try {
+    const following = await prisma.follows.findMany({
+      where: {
+        followerId: userId
+      },
+      include: {
+        following: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true
+          },
+        },
+      },
+    });
+
+    return following.map((record) => record.following);
+  } catch (error) {
+    console.error("Error checking follow status:", error);
+    return false;
+  }
+}
